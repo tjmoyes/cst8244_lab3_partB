@@ -9,15 +9,13 @@ void sigusr_handler() {
 
 int main(void) {
 	int numChildren;
-	pid_t wpid;
+	pid_t pid;
 
 	printf("Enter the number of children: ");
 	scanf("%d", &numChildren);
 
 	printf("PID = %d : Parent running...\n", getpid());
 	for(int i = 0; i < numChildren; i++) {
-		pid_t pid;
-
 		if((pid = fork()) < 0) {
 			perror("fork");
 			exit(1);
@@ -36,11 +34,14 @@ int main(void) {
 			printf("PID = %d : Child received USR1. \n", getpid());
 			printf("PID = %d : Child exiting.\n", getpid());
 			exit(SIGUSR1);
-		} else {
+		} else if (pid > 0) {
 			// parent
-			waitpid(pid, SIGUSR1, 0);
-			printf("PID = %d : Children finished, parent exiting.\n", getpid());
-			return EXIT_SUCCESS;
+			continue;
 		}
 	}
+
+	while(wait(NULL) > 0);
+
+	printf("PID = %d : Children finished, parent exiting.\n", getpid());
+	return EXIT_SUCCESS;
 }
