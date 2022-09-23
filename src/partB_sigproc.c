@@ -11,6 +11,12 @@ int main(void) {
 	int numChildren;
 	pid_t pid;
 
+	struct sigaction sa;
+	sa.sa_handler = sigusr_handler;
+	sa.sa_flags = 0;
+	sigemptyset(&sa.sa_mask);
+	sigaction(SIGUSR1, &sa, NULL);
+
 	printf("Enter the number of children: ");
 	scanf("%d", &numChildren);
 
@@ -22,18 +28,16 @@ int main(void) {
 		}
 		else if(pid == 0) {
 			// child
-			struct sigaction sa;
-			sa.sa_handler = sigusr_handler;
-			sa.sa_flags = 0;
-			sigemptyset(&sa.sa_mask);
-			sigaction(SIGUSR1, &sa, NULL);
-
 			printf("PID = %d : Child running...\n", getpid());
-			while(!usr1Happened);
+			while(!usr1Happened) {
+				if(getppid() == 1) {
+					exit(1);
+				}
+			}
 
 			printf("PID = %d : Child received USR1. \n", getpid());
 			printf("PID = %d : Child exiting.\n", getpid());
-			exit(SIGUSR1);
+			exit(EXIT_SUCCESS);
 		} else if (pid > 0) {
 			// parent
 			continue;
